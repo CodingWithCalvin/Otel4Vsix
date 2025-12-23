@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Linq;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
@@ -367,11 +368,7 @@ namespace Otel4Vsix
             {
                 builder.AddOtlpExporter(options =>
                 {
-                    options.Endpoint = new Uri(_configuration.OtlpEndpoint);
-                    options.Protocol = _configuration.UseOtlpHttp
-                        ? OtlpExportProtocol.HttpProtobuf
-                        : OtlpExportProtocol.Grpc;
-                    options.TimeoutMilliseconds = _configuration.ExportTimeoutMilliseconds;
+                    ConfigureOtlpExporter(options);
                 });
             }
 
@@ -395,11 +392,7 @@ namespace Otel4Vsix
             {
                 builder.AddOtlpExporter(options =>
                 {
-                    options.Endpoint = new Uri(_configuration.OtlpEndpoint);
-                    options.Protocol = _configuration.UseOtlpHttp
-                        ? OtlpExportProtocol.HttpProtobuf
-                        : OtlpExportProtocol.Grpc;
-                    options.TimeoutMilliseconds = _configuration.ExportTimeoutMilliseconds;
+                    ConfigureOtlpExporter(options);
                 });
             }
 
@@ -427,11 +420,7 @@ namespace Otel4Vsix
                     {
                         options.AddOtlpExporter(exporterOptions =>
                         {
-                            exporterOptions.Endpoint = new Uri(_configuration.OtlpEndpoint);
-                            exporterOptions.Protocol = _configuration.UseOtlpHttp
-                                ? OtlpExportProtocol.HttpProtobuf
-                                : OtlpExportProtocol.Grpc;
-                            exporterOptions.TimeoutMilliseconds = _configuration.ExportTimeoutMilliseconds;
+                            ConfigureOtlpExporter(exporterOptions);
                         });
                     }
 
@@ -442,6 +431,23 @@ namespace Otel4Vsix
                     }
                 });
             });
+        }
+
+        private static void ConfigureOtlpExporter(OtlpExporterOptions options)
+        {
+            options.Endpoint = new Uri(_configuration.OtlpEndpoint);
+            options.Protocol = _configuration.UseOtlpHttp
+                ? OtlpExportProtocol.HttpProtobuf
+                : OtlpExportProtocol.Grpc;
+            options.TimeoutMilliseconds = _configuration.ExportTimeoutMilliseconds;
+
+            // Add custom headers if configured
+            if (_configuration.OtlpHeaders.Count > 0)
+            {
+                var headerString = string.Join(",",
+                    _configuration.OtlpHeaders.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+                options.Headers = headerString;
+            }
         }
 
         private static void ThrowIfNotInitialized()

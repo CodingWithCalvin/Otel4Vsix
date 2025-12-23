@@ -225,6 +225,7 @@ catch (Exception ex)
 | `ServiceVersion` | `string` | `"1.0.0"` | Service version |
 | `OtlpEndpoint` | `string` | `null` | OTLP collector endpoint (e.g., `http://localhost:4317`) |
 | `UseOtlpHttp` | `bool` | `false` | Use HTTP/protobuf instead of gRPC |
+| `OtlpHeaders` | `IDictionary<string, string>` | empty | Custom headers for OTLP requests (auth, API keys) |
 | `EnableConsoleExporter` | `bool` | `false` | Output telemetry to console (for debugging) |
 | `EnableTracing` | `bool` | `true` | Enable distributed tracing |
 | `EnableMetrics` | `bool` | `true` | Enable metrics collection |
@@ -254,6 +255,23 @@ VsixTelemetry.Initialize(new TelemetryConfiguration
     },
     ExceptionFilter = ex => !(ex is OperationCanceledException)  // Ignore cancellations
 });
+```
+
+### Example: Using Custom Headers (Honeycomb, etc.)
+
+```csharp
+var config = new TelemetryConfiguration
+{
+    ServiceName = "MyExtension",
+    OtlpEndpoint = "https://api.honeycomb.io:443",
+    UseOtlpHttp = true
+};
+
+// Add authentication headers
+config.OtlpHeaders["x-honeycomb-team"] = "your-api-key";
+config.OtlpHeaders["x-honeycomb-dataset"] = "your-dataset";
+
+VsixTelemetry.Initialize(config);
 ```
 
 ---
