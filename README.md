@@ -276,27 +276,6 @@ VsixTelemetry.Initialize(config);
 
 ---
 
-## Dependency Injection
-
-If your extension uses dependency injection:
-
-```csharp
-using Otel4Vsix.Extensions;
-
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddOtel4Vsix(config =>
-    {
-        config.ServiceName = "MyExtension";
-        config.OtlpEndpoint = "http://localhost:4317";
-    });
-
-    // Now ILogger<T> is available via DI
-}
-```
-
----
-
 ## Supported Backends
 
 Otel4Vsix exports telemetry via OTLP, which is supported by:

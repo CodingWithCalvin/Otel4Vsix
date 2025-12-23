@@ -69,7 +69,6 @@ The library follows a static facade pattern for ease of use:
 - **Metrics/MetricsProvider.cs** - Manages `Meter` for counters, histograms, gauges
 - **Logging/LoggerProvider.cs** - Wraps `ILoggerFactory` for OpenTelemetry-integrated logging
 - **Exceptions/ExceptionTracker.cs** - Captures exceptions manually and via global handlers
-- **Extensions/ServiceCollectionExtensions.cs** - DI integration via `AddOtel4Vsix()`
 
 ## Key Implementation Details
 
