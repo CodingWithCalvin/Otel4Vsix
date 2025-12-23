@@ -41,6 +41,21 @@ namespace Otel4Vsix
         public bool UseOtlpHttp { get; set; }
 
         /// <summary>
+        /// Gets custom headers to include in OTLP export requests.
+        /// </summary>
+        /// <remarks>
+        /// Use this to add authentication headers (API keys, bearer tokens) or other custom headers
+        /// required by your telemetry backend.
+        /// <example>
+        /// <code>
+        /// config.OtlpHeaders["x-api-key"] = "your-api-key";
+        /// config.OtlpHeaders["Authorization"] = "Bearer your-token";
+        /// </code>
+        /// </example>
+        /// </remarks>
+        public IDictionary<string, string> OtlpHeaders { get; } = new Dictionary<string, string>();
+
+        /// <summary>
         /// Gets or sets a value indicating whether the console exporter is enabled.
         /// </summary>
         /// <remarks>
