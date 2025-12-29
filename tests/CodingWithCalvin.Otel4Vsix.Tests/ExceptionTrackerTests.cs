@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CodingWithCalvin.Otel4Vsix.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Otel4Vsix.Exceptions;
 using Xunit;
 
 namespace CodingWithCalvin.Otel4Vsix.Tests

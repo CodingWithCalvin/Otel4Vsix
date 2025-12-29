@@ -17,6 +17,7 @@ jobs:
 
     permissions:
       contents: write
+      id-token: write  
 
     steps:
     - name: Checkout
@@ -57,5 +58,16 @@ jobs:
           ./nupkg/*.nupkg
           ./nupkg/*.snupkg
 
+    # Get a short-lived NuGet API key
+    - name: NuGet login (OIDC → temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USERNAME }}
+    
     - name: Push to NuGet
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: |
+        Get-ChildItem ./nupkg/*.nupkg | ForEach-Object {
+          dotnet nuget push $_.FullName --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }
+      shell: pwsh

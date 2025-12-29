@@ -1,8 +1,8 @@
 using System;
+using CodingWithCalvin.Otel4Vsix.Logging;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Otel4Vsix.Logging;
 using Xunit;
 
 namespace CodingWithCalvin.Otel4Vsix.Tests

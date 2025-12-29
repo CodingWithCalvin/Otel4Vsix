@@ -94,3 +94,51 @@ The library follows a static facade pattern for ease of use:
    - Builds and packs with that version
    - Creates GitHub release with changelog
    - Publishes to NuGet.org
+
+---
+
+## Gotchas & Known Issues
+
+### Visual Studio Bundles OpenTelemetry and Microsoft.Extensions.*
+
+**Problem:** Visual Studio 2022+ bundles its own versions of OpenTelemetry and Microsoft.Extensions.* libraries in `PublicAssemblies` and `CommonExtensions`. If your extension ships different versions, you'll get `MissingMethodException` or assembly binding failures.
+
+**VS Bundled Versions (as of Dec 2025):**
+| Library | VS 2022 | VS 2026 |
+|---------|---------|---------|
+| OpenTelemetry | 1.9.0 | 1.12.0 |
+| Microsoft.Extensions.* | 9.0 | 9.0 |
+| System.Diagnostics.DiagnosticSource | 9.0 | 9.0 |
+
+**Solution:**
+- Use OpenTelemetry 1.10.0 (compatible with 9.0 dependencies)
+- Do NOT use OpenTelemetry 1.14.0+ (requires DiagnosticSource 10.0)
+- Ship OpenTelemetry DLLs separately (not merged) so they're found before VS's copies
+
+### ILRepack Breaks Protobuf Serialization
+
+**Problem:** Using ILRepack with `Internalize="true"` corrupts protobuf serialization, causing OTLP backends to reject requests with "failed to parse OTLP request body".
+
+**Solution:** Disable ILRepack entirely (`<ILRepackEnabled>false</ILRepackEnabled>`). Ship all OpenTelemetry assemblies as separate NuGet dependencies.
+
+### OTLP SDK Does Not Auto-Append Signal Paths
+
+**Problem:** When configuring `OtlpExporterOptions.Endpoint` programmatically, the OpenTelemetry .NET SDK does NOT automatically append signal-specific paths (`/v1/traces`, `/v1/metrics`, `/v1/logs`). All signals get sent to the same URL, causing HTTP 400 errors.
+
+**Solution:** Manually append signal paths in `ConfigureOtlpExporter()` based on signal type:
+```csharp
+var signalPath = signalType switch
+{
+    OtlpSignalType.Traces => "/v1/traces",
+    OtlpSignalType.Metrics => "/v1/metrics",
+    OtlpSignalType.Logs => "/v1/logs",
+    _ => "/v1/traces"
+};
+endpoint = baseUrl.TrimEnd('/') + signalPath;
+```
+
+### Google.Protobuf Must Flow as Dependency
+
+**Problem:** If Google.Protobuf is merged via ILRepack or not available at runtime, protobuf serialization fails.
+
+**Solution:** Reference Google.Protobuf as a regular NuGet dependency (not `PrivateAssets="all"`) so it flows to consumers and ships with the extension.

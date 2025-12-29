@@ -1,6 +1,5 @@
 using System;
 using FluentAssertions;
-using Otel4Vsix;
 using Xunit;
 
 namespace CodingWithCalvin.Otel4Vsix.Tests

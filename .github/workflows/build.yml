@@ -29,5 +29,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-output
-        path: src/Otel4Vsix/bin/Release/
+        path: src/CodingWithCalvin.Otel4Vsix/bin/Release/net48
         retention-days: 7

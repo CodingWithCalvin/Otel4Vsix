@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.Metrics;
+using CodingWithCalvin.Otel4Vsix.Metrics;
 using FluentAssertions;
-using Otel4Vsix.Metrics;
 using Xunit;
 
 namespace CodingWithCalvin.Otel4Vsix.Tests

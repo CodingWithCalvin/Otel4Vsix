@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
+using CodingWithCalvin.Otel4Vsix.Tracing;
 using FluentAssertions;
-using Otel4Vsix.Tracing;
 using Xunit;
 
 namespace CodingWithCalvin.Otel4Vsix.Tests
