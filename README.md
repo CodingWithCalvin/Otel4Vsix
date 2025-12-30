@@ -1,26 +1,40 @@
-# Otel4Vsix
+<p align="center">
+  <img src="assets/icon.png" alt="Otel4Vsix Logo" width="128" height="128">
+</p>
 
-[![Build](https://github.com/CodingWithCalvin/Otel4Vsix/actions/workflows/build.yml/badge.svg)](https://github.com/CodingWithCalvin/Otel4Vsix/actions/workflows/build.yml)
-[![NuGet](https://img.shields.io/nuget/v/CodingWithCalvin.Otel4Vsix.svg)](https://www.nuget.org/packages/CodingWithCalvin.Otel4Vsix/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/CodingWithCalvin.Otel4Vsix.svg)](https://www.nuget.org/packages/CodingWithCalvin.Otel4Vsix/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<h1 align="center">🔭 Otel4Vsix</h1>
 
-OpenTelemetry support library for Visual Studio 2022+ extensions. Add distributed tracing, metrics, logging, and exception tracking to your VSIX with minimal configuration.
+<p align="center">
+  <a href="https://github.com/CodingWithCalvin/Otel4Vsix/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/CodingWithCalvin/Otel4Vsix/build.yml?style=for-the-badge&label=Build" alt="Build"></a>
+  <a href="https://www.nuget.org/packages/CodingWithCalvin.Otel4Vsix/"><img src="https://img.shields.io/nuget/v/CodingWithCalvin.Otel4Vsix?style=for-the-badge&logo=nuget" alt="NuGet"></a>
+  <a href="https://www.nuget.org/packages/CodingWithCalvin.Otel4Vsix/"><img src="https://img.shields.io/nuget/dt/CodingWithCalvin.Otel4Vsix?style=for-the-badge&logo=nuget&label=Downloads" alt="NuGet Downloads"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  🚀 <strong>Add OpenTelemetry observability to your Visual Studio extensions in minutes!</strong>
+</p>
+
+Otel4Vsix is a powerful yet simple library that brings distributed tracing, metrics, logging, and exception tracking to your VSIX extensions with minimal configuration. See exactly what's happening inside your extension! 👀
 
 ---
 
-## Features
+## ✨ Features
 
-- **Distributed Tracing** - Track operations across your extension with spans and activities
-- **Metrics** - Counters, histograms, and gauges for performance monitoring
-- **Structured Logging** - OpenTelemetry-integrated logging via `ILogger`
-- **Exception Tracking** - Automatic and manual exception capture with full context
-- **Multiple Exporters** - OTLP (gRPC/HTTP) for production, Console for debugging
-- **VS-Specific Helpers** - Pre-configured spans for commands, tool windows, and documents
+| Feature | Description |
+|---------|-------------|
+| 📊 **Distributed Tracing** | Track operations across your extension with spans and activities |
+| 📈 **Metrics** | Counters, histograms, and gauges for performance monitoring |
+| 📝 **Structured Logging** | OpenTelemetry-integrated logging via `ILogger` |
+| 💥 **Exception Tracking** | Automatic and manual exception capture with full context |
+| 🔌 **Multiple Export Modes** | OTLP (gRPC/HTTP) for production, Debug output for development |
+| 🎯 **VS-Specific Helpers** | Pre-configured spans for commands, tool windows, and documents |
+| 🏗️ **Fluent Builder API** | Clean, chainable configuration |
+| 🔧 **Auto-Detection** | Automatically captures VS version, edition, OS, and architecture |
 
 ---
 
-## Installation
+## 📦 Installation
 
 ### Package Manager
 ```powershell
@@ -39,32 +53,33 @@ dotnet add package CodingWithCalvin.Otel4Vsix
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Initialize Telemetry
+### 1️⃣ Initialize Telemetry
 
 In your Visual Studio extension's `InitializeAsync` method:
 
 ```csharp
-using Otel4Vsix;
+using CodingWithCalvin.Otel4Vsix;
 
 protected override async Task InitializeAsync(
     CancellationToken cancellationToken,
     IProgress<ServiceProgressData> progress)
 {
-    await base.InitializeAsync(cancellationToken, progress);
+    await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-    VsixTelemetry.Initialize(new TelemetryConfiguration
-    {
-        ServiceName = "MyAwesomeExtension",
-        ServiceVersion = "1.0.0",
-        OtlpEndpoint = "http://localhost:4317",
-        EnableConsoleExporter = true  // Useful during development
-    });
+    VsixTelemetry.Configure()
+        .WithServiceName("MyAwesomeExtension")
+        .WithServiceVersion("1.0.0")
+        .WithVisualStudioAttributes(this)  // 🪄 Auto-captures VS version & edition!
+        .WithEnvironmentAttributes()        // 🖥️ Auto-captures OS & architecture!
+        .WithOtlpHttp("https://api.honeycomb.io")
+        .WithHeader("x-honeycomb-team", "your-api-key")
+        .Initialize();
 }
 ```
 
-### 2. Shutdown on Dispose
+### 2️⃣ Shutdown on Dispose
 
 ```csharp
 protected override void Dispose(bool disposing)
@@ -77,24 +92,60 @@ protected override void Dispose(bool disposing)
 }
 ```
 
+🎉 **That's it!** Your extension is now observable!
+
 ---
 
-## Usage
+## 🎛️ Telemetry Modes
 
-### Tracing
+Otel4Vsix supports multiple telemetry modes to fit your workflow:
+
+| Mode | Description |
+|------|-------------|
+| `Auto` | 🤖 **Default** - Uses OTLP if endpoint configured, otherwise Debug output |
+| `Debug` | 🐛 Outputs to VS Output window (visible when debugging) |
+| `Otlp` | 📡 Exports via OTLP protocol to your collector |
+| `Disabled` | 🔇 No telemetry collection |
+
+### 💡 Pro Tip: Development vs Production
+
+```csharp
+var builder = VsixTelemetry.Configure()
+    .WithServiceName(Vsix.Name)
+    .WithServiceVersion(Vsix.Version)
+    .WithVisualStudioAttributes(this)
+    .WithEnvironmentAttributes();
+
+#if !DEBUG
+// 📡 Only send to collector in Release builds
+builder
+    .WithOtlpHttp("https://api.honeycomb.io")
+    .WithHeader("x-honeycomb-team", apiKey);
+#endif
+
+builder.Initialize();
+```
+
+In Debug builds, telemetry automatically outputs to the VS **Output** window! 🔍
+
+---
+
+## 📊 Usage
+
+### 🔍 Tracing
 
 Create spans to track operations and their duration:
 
 ```csharp
-// Simple span
+// 🎯 Simple span
 using var activity = VsixTelemetry.Tracer.StartActivity("ProcessFile");
 activity?.SetTag("file.path", filePath);
 activity?.SetTag("file.size", fileSize);
 
-// VS command span (with pre-configured attributes)
+// ⚡ VS command span (with pre-configured attributes)
 using var commandSpan = VsixTelemetry.StartCommandActivity("MyExtension.DoSomething");
 
-// Nested spans for detailed tracing
+// 🪆 Nested spans for detailed tracing
 using var outer = VsixTelemetry.Tracer.StartActivity("LoadProject");
 {
     using var inner = VsixTelemetry.Tracer.StartActivity("ParseProjectFile");
@@ -102,7 +153,7 @@ using var outer = VsixTelemetry.Tracer.StartActivity("LoadProject");
 }
 ```
 
-#### Error Handling in Spans
+#### ⚠️ Error Handling in Spans
 
 ```csharp
 using var activity = VsixTelemetry.StartActivity("RiskyOperation");
@@ -120,12 +171,12 @@ catch (Exception ex)
 
 ---
 
-### Metrics
+### 📈 Metrics
 
 Record counters, histograms, and gauges:
 
 ```csharp
-// Counter - track occurrences
+// 🔢 Counter - track occurrences
 var commandCounter = VsixTelemetry.GetOrCreateCounter<long>(
     "extension.commands.executed",
     "{command}",
@@ -134,7 +185,7 @@ var commandCounter = VsixTelemetry.GetOrCreateCounter<long>(
 commandCounter?.Add(1,
     new KeyValuePair<string, object>("command.name", "FormatDocument"));
 
-// Histogram - track distributions (e.g., durations)
+// 📊 Histogram - track distributions (e.g., durations)
 var durationHistogram = VsixTelemetry.GetOrCreateHistogram<double>(
     "extension.operation.duration",
     "ms",
@@ -149,16 +200,17 @@ durationHistogram?.Record(stopwatch.ElapsedMilliseconds,
 
 ---
 
-### Logging
+### 📝 Logging
 
 Structured logging with OpenTelemetry integration:
 
 ```csharp
-// Use the default logger
-VsixTelemetry.Logger.LogInformation("Processing file: {FilePath}", filePath);
-VsixTelemetry.Logger.LogWarning("File not found, using default: {DefaultPath}", defaultPath);
+// 📢 Quick logging methods
+VsixTelemetry.LogInformation("Processing file: {FilePath}", filePath);
+VsixTelemetry.LogWarning("File not found, using default: {DefaultPath}", defaultPath);
+VsixTelemetry.LogError(ex, "Failed to process {FileName}", fileName);
 
-// Create a typed logger for your class
+// 🏷️ Create a typed logger for your class
 public class MyToolWindow
 {
     private readonly ILogger<MyToolWindow> _logger = VsixTelemetry.CreateLogger<MyToolWindow>();
@@ -167,29 +219,19 @@ public class MyToolWindow
     {
         _logger.LogDebug("Starting work...");
         // ...
-        _logger.LogInformation("Work completed successfully");
+        _logger.LogInformation("Work completed successfully! 🎉");
     }
-}
-
-// Log errors with exceptions
-try
-{
-    // risky operation
-}
-catch (Exception ex)
-{
-    VsixTelemetry.Logger.LogError(ex, "Failed to process {FileName}", fileName);
 }
 ```
 
 ---
 
-### Exception Tracking
+### 💥 Exception Tracking
 
 Track exceptions with full context:
 
 ```csharp
-// Manual exception tracking
+// 🎯 Manual exception tracking
 try
 {
     // risky operation
@@ -200,7 +242,7 @@ catch (Exception ex)
     // Handle or rethrow
 }
 
-// With additional context
+// 📋 With additional context
 catch (Exception ex)
 {
     VsixTelemetry.TrackException(ex, new Dictionary<string, object>
@@ -213,119 +255,148 @@ catch (Exception ex)
 }
 ```
 
-> **Note**: Global unhandled exceptions are automatically captured when `EnableGlobalExceptionHandler` is `true` (default).
+> 💡 **Note**: Global unhandled exceptions are automatically captured when `EnableGlobalExceptionHandler` is `true` (default).
 
 ---
 
-## Configuration
+## ⚙️ Configuration Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `ServiceName` | `string` | `"VsixExtension"` | Service name for telemetry identification |
-| `ServiceVersion` | `string` | `"1.0.0"` | Service version |
-| `OtlpEndpoint` | `string` | `null` | OTLP collector endpoint (e.g., `http://localhost:4317`) |
-| `UseOtlpHttp` | `bool` | `false` | Use HTTP/protobuf instead of gRPC |
-| `OtlpHeaders` | `IDictionary<string, string>` | empty | Custom headers for OTLP requests (auth, API keys) |
-| `EnableConsoleExporter` | `bool` | `false` | Output telemetry to console (for debugging) |
-| `EnableTracing` | `bool` | `true` | Enable distributed tracing |
-| `EnableMetrics` | `bool` | `true` | Enable metrics collection |
-| `EnableLogging` | `bool` | `true` | Enable structured logging |
-| `EnableGlobalExceptionHandler` | `bool` | `true` | Capture unhandled exceptions automatically |
-| `TraceSamplingRatio` | `double` | `1.0` | Trace sampling ratio (`0.0` - `1.0`) |
-| `IncludeVisualStudioContext` | `bool` | `true` | Add VS context to telemetry |
-| `ExceptionFilter` | `Func<Exception, bool>` | `null` | Filter which exceptions to track |
-| `ResourceAttributes` | `IDictionary<string, object>` | empty | Custom resource attributes |
-| `ExportTimeoutMilliseconds` | `int` | `30000` | Export timeout |
-| `BatchExportScheduledDelayMilliseconds` | `int` | `5000` | Batch export delay |
+### 🏗️ Fluent Builder Methods
 
-### Example: Production Configuration
+| Method | Description |
+|--------|-------------|
+| `WithServiceName(name)` | Set the service name for identification |
+| `WithServiceVersion(version)` | Set the service version |
+| `WithVisualStudioAttributes(serviceProvider)` | 🪄 Auto-capture VS version & edition |
+| `WithVisualStudioAttributes(version, edition)` | Manually set VS attributes |
+| `WithEnvironmentAttributes()` | 🖥️ Auto-capture OS version & architecture |
+| `WithResourceAttribute(key, value)` | Add custom resource attributes |
+| `WithOtlpHttp(endpoint)` | Configure OTLP HTTP export |
+| `WithOtlpGrpc(endpoint)` | Configure OTLP gRPC export |
+| `WithHeader(key, value)` | Add headers for OTLP requests |
+| `WithMode(mode)` | Set telemetry mode (Auto/Debug/Otlp/Disabled) |
+| `WithTracing(enabled)` | Enable/disable tracing |
+| `WithMetrics(enabled)` | Enable/disable metrics |
+| `WithLogging(enabled)` | Enable/disable logging |
+| `WithTraceSamplingRatio(ratio)` | Set trace sampling (0.0 - 1.0) |
+| `WithGlobalExceptionHandler(enabled)` | Enable/disable auto exception capture |
+| `WithExceptionFilter(filter)` | Filter which exceptions to track |
+| `WithExportTimeout(ms)` | Set export timeout in milliseconds |
+| `Initialize()` | 🚀 Initialize telemetry |
 
-```csharp
-VsixTelemetry.Initialize(new TelemetryConfiguration
-{
-    ServiceName = "MyExtension",
-    ServiceVersion = typeof(MyPackage).Assembly.GetName().Version.ToString(),
-    OtlpEndpoint = "https://otel-collector.mycompany.com:4317",
-    TraceSamplingRatio = 0.1,  // Sample 10% of traces
-    EnableConsoleExporter = false,
-    ResourceAttributes =
-    {
-        { "deployment.environment", "production" },
-        { "service.namespace", "visualstudio-extensions" }
-    },
-    ExceptionFilter = ex => !(ex is OperationCanceledException)  // Ignore cancellations
-});
-```
+### 📋 Auto-Captured Attributes
 
-### Example: Using Custom Headers (Honeycomb, etc.)
+When using the helper methods, these attributes are automatically captured:
 
-```csharp
-var config = new TelemetryConfiguration
-{
-    ServiceName = "MyExtension",
-    OtlpEndpoint = "https://api.honeycomb.io:443",
-    UseOtlpHttp = true
-};
-
-// Add authentication headers
-config.OtlpHeaders["x-honeycomb-team"] = "your-api-key";
-config.OtlpHeaders["x-honeycomb-dataset"] = "your-dataset";
-
-VsixTelemetry.Initialize(config);
-```
+| Attribute | Source | Example |
+|-----------|--------|---------|
+| `vs.version` | `WithVisualStudioAttributes()` | `"17.12.35521.163"` |
+| `vs.edition` | `WithVisualStudioAttributes()` | `"Enterprise"` |
+| `os.version` | `WithEnvironmentAttributes()` | `"10.0.22631.0"` |
+| `host.arch` | `WithEnvironmentAttributes()` | `"X64"` or `"Arm64"` |
 
 ---
 
-## Supported Backends
+## 🔌 Supported Backends
 
 Otel4Vsix exports telemetry via OTLP, which is supported by:
 
-- [Jaeger](https://www.jaegertracing.io/)
-- [Zipkin](https://zipkin.io/)
-- [Azure Monitor / Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-overview)
-- [Honeycomb](https://www.honeycomb.io/)
-- [Datadog](https://www.datadoghq.com/)
-- [Grafana Tempo](https://grafana.com/oss/tempo/)
-- [AWS X-Ray](https://aws.amazon.com/xray/)
-- [Google Cloud Trace](https://cloud.google.com/trace)
-- Any OTLP-compatible collector
+| Backend | Link |
+|---------|------|
+| 🐝 Honeycomb | [honeycomb.io](https://www.honeycomb.io/) |
+| 🔵 Azure Monitor | [Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-overview) |
+| 🐕 Datadog | [datadoghq.com](https://www.datadoghq.com/) |
+| 🟡 Jaeger | [jaegertracing.io](https://www.jaegertracing.io/) |
+| 🔴 Grafana Tempo | [grafana.com/oss/tempo](https://grafana.com/oss/tempo/) |
+| 📮 Zipkin | [zipkin.io](https://zipkin.io/) |
+| ☁️ AWS X-Ray | [aws.amazon.com/xray](https://aws.amazon.com/xray/) |
+| 🌐 Google Cloud Trace | [cloud.google.com/trace](https://cloud.google.com/trace) |
+| 🔧 Any OTLP-compatible collector | — |
 
 ---
 
-## Requirements
+## 📋 Example: Full Production Setup
 
-- **.NET Framework 4.8**
-- **Visual Studio 2022** or later
+```csharp
+using CodingWithCalvin.Otel4Vsix;
 
-## Dependencies
+public sealed class MyExtensionPackage : AsyncPackage
+{
+    protected override async Task InitializeAsync(
+        CancellationToken cancellationToken,
+        IProgress<ServiceProgressData> progress)
+    {
+        await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-- OpenTelemetry (>= 1.7.0)
-- OpenTelemetry.Exporter.OpenTelemetryProtocol (>= 1.7.0)
-- OpenTelemetry.Exporter.Console (>= 1.7.0)
-- Microsoft.Extensions.Logging (>= 8.0.0)
-- Microsoft.VisualStudio.SDK (>= 17.0)
+        var builder = VsixTelemetry.Configure()
+            .WithServiceName("MyExtension")
+            .WithServiceVersion(Vsix.Version)
+            .WithVisualStudioAttributes(this)
+            .WithEnvironmentAttributes()
+            .WithResourceAttribute("deployment.environment", "production")
+            .WithTraceSamplingRatio(0.1)  // Sample 10% of traces
+            .WithExceptionFilter(ex => ex is not OperationCanceledException);
+
+#if !DEBUG
+        builder
+            .WithOtlpHttp("https://api.honeycomb.io")
+            .WithHeader("x-honeycomb-team", Config.HoneycombApiKey);
+#endif
+
+        builder.Initialize();
+
+        // ... rest of initialization
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            VsixTelemetry.Shutdown();
+        }
+        base.Dispose(disposing);
+    }
+}
+```
 
 ---
 
-## Contributing
+## 📋 Requirements
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+| Requirement | Version |
+|-------------|---------|
+| .NET Framework | 4.8 |
+| Visual Studio | 2022 or later |
 
 ---
 
-## License
+## 🤝 Contributing
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Contributions are welcome! 🎉
+
+1. 🍴 Fork the repository
+2. 🌿 Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. 💾 Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. 📤 Push to the branch (`git push origin feature/AmazingFeature`)
+5. 🔃 Open a Pull Request
 
 ---
 
-## Acknowledgments
+## 👥 Contributors
 
-- Built on top of [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)
-- Inspired by the need for better observability in Visual Studio extensions
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Built on top of [OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet) 🔭
+- Inspired by the need for better observability in Visual Studio extensions 💡
+- Made with ❤️ by [Coding with Calvin](https://github.com/CodingWithCalvin)
