@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using CodingWithCalvin.Otel4Vsix.Exceptions;
+using CodingWithCalvin.Otel4Vsix.Exporters;
 using CodingWithCalvin.Otel4Vsix.Logging;
 using CodingWithCalvin.Otel4Vsix.Tracing;
 using Microsoft.Extensions.Logging;
@@ -29,6 +30,7 @@ public static class VsixTelemetry
     private static readonly object _lock = new object();
     private static volatile bool _isInitialized;
     private static TelemetryConfiguration _configuration;
+    private static TelemetryMode _effectiveMode;
     private static ActivitySourceProvider _activitySourceProvider;
     private static Metrics.MetricsProvider _metricsProvider;
     private static Logging.LoggerProvider _loggerProvider;
@@ -41,6 +43,27 @@ public static class VsixTelemetry
     /// Gets a value indicating whether telemetry has been initialized.
     /// </summary>
     public static bool IsInitialized => _isInitialized;
+
+    /// <summary>
+    /// Gets the effective telemetry mode after Auto resolution.
+    /// </summary>
+    public static TelemetryMode EffectiveMode => _effectiveMode;
+
+    /// <summary>
+    /// Creates a new <see cref="TelemetryBuilder"/> for fluent configuration.
+    /// </summary>
+    /// <returns>A new builder instance.</returns>
+    /// <example>
+    /// <code>
+    /// VsixTelemetry.Configure()
+    ///     .WithServiceName("MyExtension")
+    ///     .WithServiceVersion("1.0.0")
+    ///     .WithOtlpHttp("https://api.honeycomb.io")
+    ///     .WithHeader("x-honeycomb-team", apiKey)
+    ///     .Initialize();
+    /// </code>
+    /// </example>
+    public static TelemetryBuilder Configure() => new TelemetryBuilder();
 
     /// <summary>
     /// Gets the <see cref="ActivitySource"/> for creating traces.
@@ -116,9 +139,38 @@ public static class VsixTelemetry
             }
 
             _configuration = configuration;
+            _effectiveMode = ResolveEffectiveMode(configuration);
+
+            // If disabled, mark as initialized but don't set up providers
+            if (_effectiveMode == TelemetryMode.Disabled)
+            {
+                _isInitialized = true;
+                return;
+            }
+
             InitializeProviders();
             _isInitialized = true;
+
+            // Log initialization in Debug mode
+            if (_effectiveMode == TelemetryMode.Debug)
+            {
+                System.Diagnostics.Trace.WriteLine(
+                    $"[{_configuration.ServiceName} v{_configuration.ServiceVersion}] Telemetry initialized (Mode: {_effectiveMode})");
+            }
         }
+    }
+
+    private static TelemetryMode ResolveEffectiveMode(TelemetryConfiguration configuration)
+    {
+        if (configuration.Mode != TelemetryMode.Auto)
+        {
+            return configuration.Mode;
+        }
+
+        // Auto mode: if endpoint is configured, use Otlp; otherwise Debug
+        return !string.IsNullOrWhiteSpace(configuration.OtlpEndpoint)
+            ? TelemetryMode.Otlp
+            : TelemetryMode.Debug;
     }
 
     /// <summary>
@@ -469,8 +521,8 @@ public static class VsixTelemetry
             .AddSource(_configuration.ServiceName)
             .SetSampler(new TraceIdRatioBasedSampler(_configuration.TraceSamplingRatio));
 
-        // Add OTLP exporter if endpoint is configured
-        if (!string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
+        // Add OTLP exporter only in Otlp mode
+        if (_effectiveMode == TelemetryMode.Otlp && !string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
         {
             builder.AddOtlpExporter(options =>
             {
@@ -478,10 +530,11 @@ public static class VsixTelemetry
             });
         }
 
-        // Add console exporter if enabled
-        if (_configuration.EnableConsoleExporter)
+        // Add debug exporter in Debug mode
+        if (_effectiveMode == TelemetryMode.Debug)
         {
-            builder.AddConsoleExporter();
+            builder.AddProcessor(new SimpleActivityExportProcessor(
+                new DebugActivityExporter(_configuration.ServiceName, _configuration.ServiceVersion)));
         }
 
         return builder.Build();
@@ -493,8 +546,8 @@ public static class VsixTelemetry
             .SetResourceBuilder(resourceBuilder)
             .AddMeter(_configuration.ServiceName);
 
-        // Add OTLP exporter if endpoint is configured
-        if (!string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
+        // Add OTLP exporter only in Otlp mode
+        if (_effectiveMode == TelemetryMode.Otlp && !string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
         {
             builder.AddOtlpExporter(options =>
             {
@@ -502,10 +555,11 @@ public static class VsixTelemetry
             });
         }
 
-        // Add console exporter if enabled
-        if (_configuration.EnableConsoleExporter)
+        // Add debug exporter in Debug mode
+        if (_effectiveMode == TelemetryMode.Debug)
         {
-            builder.AddConsoleExporter();
+            builder.AddReader(new PeriodicExportingMetricReader(
+                new DebugMetricExporter(_configuration.ServiceName, _configuration.ServiceVersion), 10000));
         }
 
         return builder.Build();
@@ -515,14 +569,15 @@ public static class VsixTelemetry
     {
         return Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
         {
+            builder.SetMinimumLevel(LogLevel.Trace);
             builder.AddOpenTelemetry(options =>
             {
                 options.SetResourceBuilder(resourceBuilder);
                 options.IncludeFormattedMessage = true;
                 options.IncludeScopes = true;
 
-                // Add OTLP exporter if endpoint is configured
-                if (!string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
+                // Add OTLP exporter only in Otlp mode
+                if (_effectiveMode == TelemetryMode.Otlp && !string.IsNullOrWhiteSpace(_configuration.OtlpEndpoint))
                 {
                     options.AddOtlpExporter(exporterOptions =>
                     {
@@ -530,12 +585,13 @@ public static class VsixTelemetry
                     });
                 }
 
-                // Add console exporter if enabled
-                if (_configuration.EnableConsoleExporter)
-                {
-                    options.AddConsoleExporter();
-                }
             });
+
+            // Add debug logging in Debug mode
+            if (_effectiveMode == TelemetryMode.Debug)
+            {
+                builder.AddProvider(new DebugLoggerProvider(_configuration.ServiceName, _configuration.ServiceVersion));
+            }
         });
     }
 

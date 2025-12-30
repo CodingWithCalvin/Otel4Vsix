@@ -9,6 +9,24 @@ namespace CodingWithCalvin.Otel4Vsix;
 public sealed class TelemetryConfiguration
 {
     /// <summary>
+    /// Gets or sets the telemetry mode.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// When set to <see cref="TelemetryMode.Auto"/> (the default), the library automatically
+    /// determines the mode based on configuration state:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>If an OTLP endpoint is configured, uses <see cref="TelemetryMode.Otlp"/>.</item>
+    /// <item>Otherwise, uses <see cref="TelemetryMode.Debug"/>.</item>
+    /// </list>
+    /// <para>
+    /// This allows consumers to conditionally set the endpoint for different build configurations.
+    /// </para>
+    /// </remarks>
+    public TelemetryMode Mode { get; set; } = TelemetryMode.Auto;
+
+    /// <summary>
     /// Gets or sets the service name used to identify this extension in telemetry.
     /// </summary>
     /// <remarks>
