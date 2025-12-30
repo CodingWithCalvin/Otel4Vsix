@@ -9,7 +9,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
     <PackageId>CodingWithCalvin.Otel4Vsix</PackageId>
-    <Version>0.0.15-local</Version>
+    <Version>0.0.1</Version>
     <Authors>Calvin A. Allen</Authors>
     <Company>Coding With Calvin</Company>
     <Product>CodingWithCalvin.Otel4Vsix</Product>
@@ -40,10 +40,10 @@
     <PackageReference Include="OpenTelemetry" Version="1.10.0" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.10.0" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.10.0" />
-    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.10.0" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
     <PackageReference Include="Google.Protobuf" Version="3.22.5" />
     <PackageReference Include="Grpc.Core.Api" Version="2.52.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="17.0.31903.59" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
   </ItemGroup>
 </Project>
