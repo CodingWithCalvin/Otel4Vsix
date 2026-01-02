@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/CodingWithCalvin.Otel4Vsix/CodingWithCalvin.Otel4Vsix.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/CodingWithCalvin.Otel4Vsix.Tests/CodingWithCalvin.Otel4Vsix.Tests.csproj" />
-  </Folder>
-</Solution>
