@@ -20,10 +20,10 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/CodingWithCalvin.Otel4Vsix.slnx
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build src/CodingWithCalvin.Otel4Vsix.slnx --configuration Release --no-restore
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
