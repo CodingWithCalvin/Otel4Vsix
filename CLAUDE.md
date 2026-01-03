@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. **Branch naming** - Use format: `type/scope/short-description` (e.g., `feat/tracing/add-batch-processor`)
 6. **Working an issue** - Always create a new branch from an updated main branch
 7. **Check branch status before pushing** - Verify the remote tracking branch still exists. If a PR was merged/deleted, create a new branch from main instead
-8. **Microsoft coding guidelines** - Follow Microsoft C# coding conventions and .NET library design guidelines
+8. **Microsoft coding guidelines** - Follow [Microsoft C# coding conventions](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions) and [.NET library design guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/)
 
 ---
 
@@ -37,6 +37,7 @@ gh issue close <number>
 | `test` | Adding or updating tests |
 | `chore` | Maintenance tasks |
 | `perf` | Performance improvement |
+| `ci` | CI/CD changes |
 
 ---
 
@@ -50,10 +51,10 @@ Otel4Vsix is a .NET Framework 4.8 library that provides OpenTelemetry support fo
 
 ```bash
 # Restore and build
-dotnet build CodingWithCalvin.Otel4Vsix.slnx
+dotnet build src/CodingWithCalvin.Otel4Vsix.slnx
 
 # Build Release
-dotnet build CodingWithCalvin.Otel4Vsix.slnx --configuration Release
+dotnet build src/CodingWithCalvin.Otel4Vsix.slnx --configuration Release
 
 # Create NuGet package
 dotnet pack src/CodingWithCalvin.Otel4Vsix/CodingWithCalvin.Otel4Vsix.csproj --configuration Release --output ./nupkg
