@@ -34,8 +34,18 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\..\assets\icon.png')" />
-    <None Include="build\CodingWithCalvin.Otel4Vsix.targets" Pack="true" PackagePath="build\" />
   </ItemGroup>
+
+  <!-- Exclude native gRPC assemblies from being packed as content files.
+       These will still be provided transitively via Grpc.Core dependency. -->
+  <Target Name="ExcludeGrpcNativeFromPack" BeforeTargets="GenerateNuspec;_GetPackageFiles">
+    <ItemGroup>
+      <Content Remove="@(Content)" Condition="$([System.String]::new('%(Identity)').EndsWith('grpc_csharp_ext.x64.dll'))" />
+      <Content Remove="@(Content)" Condition="$([System.String]::new('%(Identity)').EndsWith('grpc_csharp_ext.x86.dll'))" />
+      <Content Remove="@(Content)" Condition="$([System.String]::new('%(Identity)').EndsWith('libgrpc_csharp_ext.x64.dylib'))" />
+      <Content Remove="@(Content)" Condition="$([System.String]::new('%(Identity)').EndsWith('libgrpc_csharp_ext.x64.so'))" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="OpenTelemetry" Version="1.10.0" />
