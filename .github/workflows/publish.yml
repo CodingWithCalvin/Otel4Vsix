@@ -38,10 +38,10 @@ jobs:
       shell: pwsh
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore src/CodingWithCalvin.Otel4Vsix/CodingWithCalvin.Otel4Vsix.csproj
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore -p:Version=${{ steps.version.outputs.VERSION }}
+      run: dotnet build src/CodingWithCalvin.Otel4Vsix/CodingWithCalvin.Otel4Vsix.csproj --configuration Release --no-restore -p:Version=${{ steps.version.outputs.VERSION }}
 
     - name: Pack
       run: dotnet pack src/CodingWithCalvin.Otel4Vsix/CodingWithCalvin.Otel4Vsix.csproj --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
