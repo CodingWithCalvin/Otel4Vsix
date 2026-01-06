@@ -34,6 +34,7 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\..\assets\icon.png')" />
+    <None Include="build\CodingWithCalvin.Otel4Vsix.targets" Pack="true" PackagePath="build\" />
   </ItemGroup>
 
   <ItemGroup>
