@@ -85,7 +85,6 @@ jobs:
         📝 [Release Notes](https://github.com/CodingWithCalvin/Otel4Vsix/releases/tag/${{ github.ref_name }})
 
         #dotnet #visualstudio #opentelemetry #vsix #nuget
-      embed_url: https://github.com/CodingWithCalvin/Otel4Vsix/releases/tag/${{ github.ref_name }}
       embed_title: "Otel4Vsix ${{ github.ref_name }}"
       embed_description: "OpenTelemetry support library for Visual Studio 2022+ extensions"
     secrets:
@@ -106,7 +105,6 @@ jobs:
         📝 Release Notes: https://github.com/CodingWithCalvin/Otel4Vsix/releases/tag/${{ github.ref_name }}
 
         #dotnet #visualstudio #opentelemetry #vsix #nuget
-      article_url: https://github.com/CodingWithCalvin/Otel4Vsix/releases/tag/${{ github.ref_name }}
       article_title: "Otel4Vsix ${{ github.ref_name }}"
       article_description: "OpenTelemetry support library for Visual Studio 2022+ extensions"
     secrets:
